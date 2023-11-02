@@ -5,11 +5,15 @@
 
 namespace signed_RLE
 {
-template<class T>
-size_t push_end_chars(std::vector<int8_t> * v, const T data)
+size_t push_int32_t(std::vector<int8_t> * v, const int32_t data)
 {
     size_t start = v->size();
-    v->insert(v->end(), (int8_t*)&data, (int8_t*)&data + sizeof(T));
+    int32_t temp = data;
+    for (i = 0; i < sizeof(int32_t); i++)
+    {
+        v->push_back(temp & (2 ^ 8 - 1));
+        temp >>= 8;
+    }
     return start;
 }
 std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit)
@@ -25,8 +29,8 @@ std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit
     };
     Uncomp_State state = Uncomp_State::start;
     int count;
-    int8_t bigcount[sizeof(int32_t)];
-    int bigcount_builder;
+    int32_t bigcount;
+    int bigint_bytes;
 
     for(auto c : compressed)
     {
@@ -37,7 +41,8 @@ std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit
             if(c == 0)
             {
                 state = Uncomp_State::big_number;
-                bigcount_builder = 0;
+                bigint_bytes = 0;
+                bigcount = 0;
             }
             else if(c > 0)
             {
@@ -52,25 +57,24 @@ std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit
             break;
         case Uncomp_State::big_number:
             //printf("building big number '%d'\n", c);
-            bigcount[bigcount_builder] = c;
-            bigcount_builder++;
-            if(bigcount_builder >= sizeof(int32_t))
+            bigcount <<= 8 * bigint_bytes;
+            bigcount += c;
+            bigint_bytes++;
+            if(bigint_bytes >= sizeof(int32_t))
             {
-                int32_t copycount;
-                memcpy(&copycount, bigcount, sizeof(int32_t));
-                //printf("built big number %d\n", copycount);
-                if(copycount == 0)
+                //printf("built big number %d\n", bigcount);
+                if(bigcount == 0)
                 {
                     return out;
                 }
-                else if(copycount > 0)
+                else if(bigcount > 0)
                 {
-                    count = copycount;
+                    count = bigcount;
                     state = Uncomp_State::repeat_data;
                 }
-                else//(copycount < 0)
+                else//(bigcount < 0)
                 {
-                    count = abs(copycount);
+                    count = abs(bigcount);
                     state = Uncomp_State::unique_data;
                 }
             break;
@@ -162,7 +166,7 @@ std::vector<int8_t> compress(const std::vector<int8_t> & raw)
             if(s.count >= std::numeric_limits<int8_t>::max())
             {
                 out.push_back(0);
-                push_end_chars<int32_t>(&out, s.count);
+                push_int32_t(&out, s.count);
             }
             else
                 out.push_back(static_cast<int8_t>(s.count));
@@ -173,7 +177,7 @@ std::vector<int8_t> compress(const std::vector<int8_t> & raw)
             if(s.count <= std::numeric_limits<int8_t>::min())
             {
                 out.push_back(0);
-                push_end_chars<int32_t>(&out, s.count);
+                push_int32_t(&out, s.count);
             }
             else
                 out.push_back(static_cast<int8_t>(s.count));
