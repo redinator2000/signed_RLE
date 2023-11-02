@@ -114,8 +114,8 @@ std::vector<int8_t> compress(const std::vector<int8_t> & raw)
         builder_segments.similar = raw[0] + 1;
         for(auto r : raw)
         {
-            if(r == builder_segments.similar)
-                builder_segments.count++;//todo: split segments if goes above int32_t count
+            if(r == builder_segments.similar && builder_segments.count < std::numeric_limits<int32_t>::max())
+                builder_segments.count++;
             else
             {
                 if(builder_segments.count)
