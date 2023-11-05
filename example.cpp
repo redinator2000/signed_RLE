@@ -52,4 +52,15 @@ int main()
     for(int i = 0; i < 10000; i++)
         counting.push_back(i);
     test_compression(counting); //signed_RLE slightly increases size for data that doesn't have any 4 bytes repeating
+
+    // test long segment splitting
+    // needs a vector with at least 2,147,483,647 elements (maybe too big for a vector)
+    // should allocate at least 3 GB of memory
+    // probably not a good idea to run this
+    /*
+    std::vector<int8_t> threebillion_fives(3000000000, 5);
+    test_compression(threebillion_fives);
+    threebillion_fives[1000000000] = 6;
+    test_compression(threebillion_fives);
+    */
 }
