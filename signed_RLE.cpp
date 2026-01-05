@@ -12,7 +12,7 @@ size_t push_end_chars(std::vector<int8_t> * v, const T data)
     v->insert(v->end(), (int8_t*)&data, (int8_t*)&data + sizeof(T));
     return start;
 }
-std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit)
+std::vector<int8_t> uncompress(std::span<const int8_t> compressed, std::optional<unsigned int> limit)
 {
     std::vector<int8_t> out = {};
 
@@ -26,7 +26,7 @@ std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit
     Uncomp_State state = Uncomp_State::start;
     int count;
     int8_t bigcount[sizeof(int32_t)];
-    int bigcount_builder;
+    unsigned int bigcount_builder;
 
     for(auto c : compressed)
     {
@@ -79,14 +79,14 @@ std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit
         case Uncomp_State::repeat_data:
             //printf("putting in repeat %d x '%d'\n", count, c);
             out.insert(out.end(), count, c);
-            if(limit && out.size() > limit)
+            if(limit && out.size() > *limit)
                 return out;
             state = Uncomp_State::start;
             break;
         case Uncomp_State::unique_data:
             //printf("putting in unique '%d', %d remaining\n", c, count);
             out.push_back(c);
-            if(limit && out.size() > limit)
+            if(limit && out.size() > *limit)
                 return out;
             count--;
             if(count <= 0)
@@ -96,7 +96,7 @@ std::vector<int8_t> uncompress(const std::vector<int8_t> & compressed, int limit
     }
     return out;
 }
-std::vector<int8_t> compress(const std::vector<int8_t> & raw)
+std::vector<int8_t> compress(std::span<const int8_t> raw)
 {
     std::vector<int8_t> out = {};
     if(raw.empty())

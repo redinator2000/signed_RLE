@@ -5,9 +5,9 @@
 bool test_compression(const std::vector<int8_t> & some_data)
 {
     printf("testing data\n");
-    printf("  original   size %d\n", some_data.size());
+    printf("  original   size %lld\n", some_data.size());
     std::vector<int8_t> compressed = signed_RLE::compress(some_data);
-    printf("  compressed size %d\n", compressed.size());
+    printf("  compressed size %lld\n", compressed.size());
     std::vector<int8_t> uncompressed = signed_RLE::uncompress(compressed);
     //printf("  uncompressed data %d\n", uncompressed.size());
     if(some_data.size() == uncompressed.size())
@@ -27,7 +27,7 @@ bool test_compression(const std::vector<int8_t> & some_data)
     return true;
 }
 
-int main()
+void example()
 {
     test_compression({1});
     test_compression({2, 2});
