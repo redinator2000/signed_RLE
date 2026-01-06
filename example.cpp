@@ -2,12 +2,18 @@
 #include <cstdio>
 #include "signed_RLE.hpp"
 
+#ifdef __linux__
+#define SIZE_PF "%ld"
+#else //_WIN32
+#define SIZE_PF "%lld"
+#endif
+
 bool test_compression(const std::vector<int8_t> & some_data)
 {
     printf("testing data\n");
-    printf("  original   size %lld\n", some_data.size());
+    printf("  original   size " SIZE_PF "\n", some_data.size());
     std::vector<int8_t> compressed = signed_RLE::compress(some_data);
-    printf("  compressed size %lld\n", compressed.size());
+    printf("  compressed size " SIZE_PF "\n", compressed.size());
     std::vector<int8_t> uncompressed = signed_RLE::uncompress(compressed);
     //printf("  uncompressed data %d\n", uncompressed.size());
     if(some_data.size() == uncompressed.size())
